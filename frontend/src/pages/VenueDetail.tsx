@@ -43,7 +43,7 @@ const VenueDetail = () => {
     }
   };
 
-  const unavailable = useMemo(() => (venue ? venue.unavailableDates.map((d) => new Date(d)) : []), [venue]);
+  const unavailable = useMemo(() => (venue && venue.unavailableDates ? venue.unavailableDates.map((d) => new Date(d)) : []), [venue]);
 
   if (loading) {
     return (

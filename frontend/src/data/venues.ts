@@ -1,6 +1,6 @@
-import venue1 from "@/assets/venue-1.jpg";
-import venue2 from "@/assets/venue-2.jpg";
-import venue3 from "@/assets/venue-3.jpg";
+const venue1 = "/venue-1.jpg";
+const venue2 = "/venue-2.jpg";
+const venue3 = "/venue-3.jpg";
 
 export type Venue = {
   id: string;

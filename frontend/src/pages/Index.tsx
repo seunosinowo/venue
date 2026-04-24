@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { VenueCard } from "@/components/VenueCard";
 import { api } from "@/lib/api";
-import heroImage from "@/assets/venue-hero.jpg";
+const heroImage = "/venue-hero.jpg";
 
 type Venue = { id: string; slug: string; name: string; location: string; maxGuests: number; pricePerDay: number; description: string; images: string[]; amenities: string[]; unavailableDates: string[] };
 
