@@ -6,18 +6,22 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 router.get('/', authenticate, async (req, res) => {
+  console.log('GET /api/venues - User:', req.user.userId);
   try {
     const venues = await prisma.venue.findMany({
       where: { hostId: req.user.userId },
       orderBy: { createdAt: 'desc' }
     });
+    console.log('Found venues:', venues.length);
     res.json(venues);
   } catch (err) {
+    console.error('Error fetching venues:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
 router.get('/public', async (req, res) => {
+  console.log('GET /api/venues/public');
   try {
     const venues = await prisma.venue.findMany({
       select: {
@@ -26,8 +30,10 @@ router.get('/public', async (req, res) => {
         unavailableDates: true, hostId: false
       }
     });
+    console.log('Public venues found:', venues.length);
     res.json(venues);
   } catch (err) {
+    console.error('Error fetching public venues:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -45,6 +51,8 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/', authenticate, async (req, res) => {
+  console.log('POST /api/venues - User:', req.user.userId);
+  console.log('Request body:', req.body);
   try {
     const { name, location, maxGuests, pricePerDay, description, images, amenities } = req.body;
     
@@ -61,8 +69,10 @@ router.post('/', authenticate, async (req, res) => {
       }
     });
     
+    console.log('Created venue:', venue.id);
     res.json(venue);
   } catch (err) {
+    console.error('Error creating venue:', err);
     res.status(500).json({ error: err.message });
   }
 });

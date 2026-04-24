@@ -36,6 +36,7 @@ app.get('/api/health', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`CORS origins allowed: localhost:3000, venue-orcin.vercel.app, and all *.vercel.app subdomains`);
 });
 
 module.exports = { prisma };
