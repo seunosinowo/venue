@@ -15,6 +15,6 @@
   ],
   "env": {
     "FRONTEND_URL": "https://tiptheteam.vercel.app",
-    "VITE_API_URL": "https://tipteam.onrender.com/api"
+    "VITE_API_URL": "https://venue-xcqd.onrender.com/api"
   }
 }

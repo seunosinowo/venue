@@ -4,6 +4,7 @@
   "description": "Backend API for Venue Connect",
   "main": "src/index.js",
   "scripts": {
+    "build": "echo 'No build step needed'",
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "db:generate": "prisma generate",
