@@ -14,7 +14,7 @@
     }
   ],
   "env": {
-    "FRONTEND_URL": "https://tiptheteam.vercel.app",
+    "FRONTEND_URL": "https://venue-orcin.vercel.app/",
     "VITE_API_URL": "https://venue-xcqd.onrender.com/api"
   }
 }
