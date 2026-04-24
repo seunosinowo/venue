@@ -159,13 +159,15 @@ const Venues = () => {
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
+        <div className="text-center sm:text-left">
           <h1 className="font-display text-2xl font-semibold sm:text-3xl md:text-4xl">Venues</h1>
           <p className="text-sm text-muted-foreground">Manage your spaces, availability, and pricing.</p>
         </div>
-        <Button onClick={() => setShowCreate(true)} className="gap-2 bg-primary hover:bg-primary-glow w-full sm:w-auto">
-          <Plus className="h-4 w-4" /> New venue
-        </Button>
+        <div className="text-center sm:text-right">
+          <Button onClick={() => setShowCreate(true)} className="gap-2 bg-primary hover:bg-primary-glow w-full sm:w-auto">
+            <Plus className="h-4 w-4" /> New venue
+          </Button>
+        </div>
       </div>
 
       {venues.length === 0 ? (
@@ -208,8 +210,38 @@ const Venues = () => {
             <div><Label>Name</Label><Input value={newVenue.name} onChange={(e) => setNewVenue({...newVenue, name: e.target.value})} required /></div>
             <div><Label>Location</Label><Input value={newVenue.location} onChange={(e) => setNewVenue({...newVenue, location: e.target.value})} required /></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div><Label>Max Guests</Label><Input type="number" value={newVenue.maxGuests} onChange={(e) => setNewVenue({...newVenue, maxGuests: +e.target.value})} required /></div>
-              <div><Label>Price/Day (₦)</Label><Input type="number" value={newVenue.pricePerDay} onChange={(e) => setNewVenue({...newVenue, pricePerDay: +e.target.value})} required /></div>
+              <div><Label>Max Guests</Label><Input 
+                type="text" 
+                value={newVenue.maxGuests === 50 ? "" : newVenue.maxGuests.toString()} 
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "") {
+                    setNewVenue({...newVenue, maxGuests: 50});
+                  } else if (/^\d+$/.test(value)) {
+                    const num = parseInt(value);
+                    setNewVenue({...newVenue, maxGuests: num > 0 ? num : 50});
+                  }
+                }} 
+                placeholder="Enter max guests"
+                inputMode="numeric"
+                pattern="[0-9]*"
+              /></div>
+              <div><Label>Price/Day (₦)</Label><Input 
+                type="text" 
+                value={newVenue.pricePerDay === 500 ? "" : newVenue.pricePerDay.toString()} 
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "") {
+                    setNewVenue({...newVenue, pricePerDay: 500});
+                  } else if (/^\d+$/.test(value)) {
+                    const num = parseInt(value);
+                    setNewVenue({...newVenue, pricePerDay: num >= 0 ? num : 500});
+                  }
+                }} 
+                placeholder="Enter price per day"
+                inputMode="numeric"
+                pattern="[0-9]*"
+              /></div>
             </div>
             <div><Label>Description</Label><Input value={newVenue.description} onChange={(e) => setNewVenue({...newVenue, description: e.target.value})} required /></div>
             
@@ -217,18 +249,27 @@ const Venues = () => {
               <Label>Venue Photos</Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {newVenue.images.map((img, i) => (
-                  <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border">
+                  <div key={i} className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border">
                     <img src={img} alt="" className="w-full h-full object-cover" />
                     <button type="button" onClick={() => removeImage(img)} className="absolute top-1 right-1 bg-black/50 rounded-full p-0.5">
                       <X className="h-3 w-3 text-white" />
                     </button>
                   </div>
                 ))}
-                <label className="w-20 h-20 rounded-lg border border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e)} />
+                <label className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg border border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted">
+                  <Upload className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                  <input 
+                    ref={fileInputRef} 
+                    type="file" 
+                    accept="image/*" 
+                    className="sr-only" 
+                    onChange={(e) => handleImageUpload(e)} 
+                  />
                 </label>
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {newVenue.images.length} image{newVenue.images.length !== 1 ? 's' : ''} uploaded
+              </p>
             </div>
 
             <div>
@@ -267,8 +308,38 @@ const Venues = () => {
             <div><Label>Name</Label><Input value={editingVenue?.name || ""} onChange={(e) => setEditingVenue({...editingVenue!, name: e.target.value})} /></div>
             <div><Label>Location</Label><Input value={editingVenue?.location || ""} onChange={(e) => setEditingVenue({...editingVenue!, location: e.target.value})} /></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div><Label>Max Guests</Label><Input type="number" value={editingVenue?.maxGuests || 0} onChange={(e) => setEditingVenue({...editingVenue!, maxGuests: +e.target.value})} /></div>
-              <div><Label>Price/Day ($)</Label><Input type="number" value={editingVenue?.pricePerDay || 0} onChange={(e) => setEditingVenue({...editingVenue!, pricePerDay: +e.target.value})} /></div>
+              <div><Label>Max Guests</Label><Input 
+                type="text" 
+                value={editingVenue?.maxGuests === 50 ? "" : editingVenue?.maxGuests?.toString() || ""} 
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "") {
+                    setEditingVenue({...editingVenue!, maxGuests: 50});
+                  } else if (/^\d+$/.test(value)) {
+                    const num = parseInt(value);
+                    setEditingVenue({...editingVenue!, maxGuests: num > 0 ? num : 50});
+                  }
+                }} 
+                placeholder="Enter max guests"
+                inputMode="numeric"
+                pattern="[0-9]*"
+              /></div>
+              <div><Label>Price/Day (₦)</Label><Input 
+                type="text" 
+                value={editingVenue?.pricePerDay === 500 ? "" : editingVenue?.pricePerDay?.toString() || ""} 
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "") {
+                    setEditingVenue({...editingVenue!, pricePerDay: 500});
+                  } else if (/^\d+$/.test(value)) {
+                    const num = parseInt(value);
+                    setEditingVenue({...editingVenue!, pricePerDay: num >= 0 ? num : 500});
+                  }
+                }} 
+                placeholder="Enter price per day"
+                inputMode="numeric"
+                pattern="[0-9]*"
+              /></div>
             </div>
             <div><Label>Description</Label><Input value={editingVenue?.description || ""} onChange={(e) => setEditingVenue({...editingVenue!, description: e.target.value})} /></div>
 
@@ -276,18 +347,26 @@ const Venues = () => {
               <Label>Venue Photos</Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {editingVenue?.images.map((img, i) => (
-                  <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border">
+                  <div key={i} className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border">
                     <img src={img} alt="" className="w-full h-full object-cover" />
                     <button type="button" onClick={() => removeImage(img, true)} className="absolute top-1 right-1 bg-black/50 rounded-full p-0.5">
                       <X className="h-3 w-3 text-white" />
                     </button>
                   </div>
                 ))}
-                <label className="w-20 h-20 rounded-lg border border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, true)} />
+                <label className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg border border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted">
+                  <Upload className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="sr-only" 
+                    onChange={(e) => handleImageUpload(e, true)} 
+                  />
                 </label>
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {editingVenue?.images.length || 0} image{(editingVenue?.images.length || 0) !== 1 ? 's' : ''} uploaded
+              </p>
             </div>
 
             <div>
