@@ -21,7 +21,6 @@ model User {
 
 model Venue {
   id              String   @id @default(cuid())
-  slug            String   @unique
   name            String
   location       String
   maxGuests       Int

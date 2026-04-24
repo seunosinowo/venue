@@ -14,10 +14,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 type Step = "browse" | "booking" | "inspection" | "done";
-type Venue = { id: string; slug: string; name: string; location: string; maxGuests: number; pricePerDay: number; description: string; images: string[]; amenities: string[]; unavailableDates: string[] };
+type Venue = { id: string; name: string; location: string; maxGuests: number; pricePerDay: number; description: string; images: string[]; amenities: string[]; unavailableDates: string[] };
 
 const VenueDetail = () => {
-  const { slug = "" } = useParams();
+  const { id = "" } = useParams();
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState<Date | undefined>();
@@ -29,11 +29,11 @@ const VenueDetail = () => {
 
   useEffect(() => {
     loadVenue();
-  }, [slug]);
+  }, [id]);
 
   const loadVenue = async () => {
     try {
-      const data = await api.venues.getBySlug(slug);
+      const data = await api.venues.getById(id);
       console.log("Loaded venue:", data);
       setVenue(data);
     } catch (err) {
@@ -162,17 +162,17 @@ const VenueDetail = () => {
               />
             </div>
             <div>
-              <h1 className="font-display text-3xl font-semibold md:text-4xl text-balance">{venue.name}</h1>
+              <h1 className="font-display text-2xl font-semibold sm:text-3xl md:text-4xl text-balance">{venue.name}</h1>
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{venue.location}</span>
                 <span className="flex items-center gap-1"><Users className="h-4 w-4" />Up to {venue.maxGuests}</span>
               </div>
-              <div className="mt-4 flex items-center justify-between">
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="font-display text-2xl font-semibold">₦{venue.pricePerDay.toLocaleString()}</span>
+                  <span className="font-display text-xl font-semibold sm:text-2xl">₦{venue.pricePerDay.toLocaleString()}</span>
                   <span className="text-sm text-muted-foreground">/day</span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={handleShare} className="gap-2 text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="sm" onClick={handleShare} className="gap-2 text-muted-foreground hover:text-foreground w-full sm:w-auto">
                   <Share2 className="h-4 w-4" /> Share
                 </Button>
               </div>

@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const getToken = () => localStorage.getItem('token');
 
@@ -47,8 +47,8 @@ export const api = {
       const res = await fetch(`${API_URL}/venues/public`);
       return res.json();
     },
-    getBySlug: async (slug: string) => {
-      const res = await fetch(`${API_URL}/venues/${slug}`);
+    getById: async (id: string) => {
+      const res = await fetch(`${API_URL}/venues/${id}`);
       if (!res.ok) throw new Error('Venue not found');
       return res.json();
     },

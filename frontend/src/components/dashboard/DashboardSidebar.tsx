@@ -17,7 +17,7 @@ const items = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard, end: true },
   { title: "Venues", url: "/dashboard/venues", icon: Building2 },
   { title: "Inspections", url: "/dashboard/inspections", icon: Inbox },
-  { title: "QR & Feedback", url: "/dashboard/qr", icon: QrCode },
+  { title: "Feedback and Complaint", url: "/dashboard/qr", icon: QrCode },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 

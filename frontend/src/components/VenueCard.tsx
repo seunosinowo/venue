@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { MapPin, Users } from "lucide-react";
 
-type Venue = { id: string; slug: string; name: string; location: string; maxGuests: number; pricePerDay: number; images: string[] };
+type Venue = { id: string; name: string; location: string; maxGuests: number; pricePerDay: number; images: string[] };
 
 export const VenueCard = ({ venue, index = 0 }: { venue: Venue; index?: number }) => {
   return (
     <Link
-      to={`/v/${venue.slug}`}
+      to={`/venue/${venue.id}`}
       className="group block animate-fade-in"
       style={{ animationDelay: `${index * 80}ms` }}
     >

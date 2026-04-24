@@ -7,11 +7,11 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Calendar as DateCalendar } from "@/components/ui/calendar";
 
 type Venue = {
-  id: string; slug: string; name: string; location: string; maxGuests: number;
+  id: string; name: string; location: string; maxGuests: number;
   pricePerDay: number; description: string; images: string[]; amenities: string[];
   unavailableDates: string[];
 };
@@ -23,8 +23,8 @@ const Venues = () => {
   const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerMode, setDatePickerMode] = useState<"create" | "edit">("create");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [newVenue, setNewVenue] = useState({ name: "", location: "", maxGuests: 50, pricePerDay: 500, description: "", slug: "", images: [] as string[], unavailableDates: [] as string[] });
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [newVenue, setNewVenue] = useState({ name: "", location: "", maxGuests: 50, pricePerDay: 500, description: "", images: [] as string[], unavailableDates: [] as string[] });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -42,8 +42,8 @@ const Venues = () => {
     }
   };
 
-  const share = (slug: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}/v/${slug}`);
+  const share = (id: string) => {
+    navigator.clipboard.writeText(`${window.location.origin}/venue/${id}`);
     toast.success("Share link copied");
   };
 
@@ -79,30 +79,34 @@ const Venues = () => {
 
   const openDatePicker = (mode: "create" | "edit") => {
     setDatePickerMode(mode);
-    setSelectedDate(undefined);
+    setSelectedDates([]);
     setShowDatePicker(true);
   };
 
-  const addUnavailableDate = () => {
-    if (!selectedDate) return;
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
+  const addUnavailableDates = () => {
+    const newDates = selectedDates.map(date => format(date, "yyyy-MM-dd"));
     if (datePickerMode === "edit" && editingVenue) {
-      if (!editingVenue.unavailableDates.includes(dateStr)) {
-        setEditingVenue({ ...editingVenue, unavailableDates: [...editingVenue.unavailableDates, dateStr] });
-      }
+      const existingDates = editingVenue.unavailableDates;
+      const uniqueDates = newDates.filter(date => !existingDates.includes(date));
+      setEditingVenue({ ...editingVenue, unavailableDates: [...existingDates, ...uniqueDates] });
+      toast.success(`${uniqueDates.length} date${uniqueDates.length > 1 ? 's' : ''} blocked successfully`);
     } else {
-      if (!newVenue.unavailableDates.includes(dateStr)) {
-        setNewVenue({ ...newVenue, unavailableDates: [...newVenue.unavailableDates, dateStr] });
-      }
+      const existingDates = newVenue.unavailableDates;
+      const uniqueDates = newDates.filter(date => !existingDates.includes(date));
+      setNewVenue({ ...newVenue, unavailableDates: [...existingDates, ...uniqueDates] });
+      toast.success(`${uniqueDates.length} date${uniqueDates.length > 1 ? 's' : ''} blocked successfully`);
     }
-    setSelectedDate(undefined);
+    setSelectedDates([]);
+    setShowDatePicker(false); // Auto-close the date picker after blocking dates
   };
 
   const removeUnavailableDate = (dateStr: string, isEdit = false) => {
     if (isEdit && editingVenue) {
       setEditingVenue({ ...editingVenue, unavailableDates: editingVenue.unavailableDates.filter((d) => d !== dateStr) });
+      toast.success("Date unblocked successfully");
     } else {
       setNewVenue({ ...newVenue, unavailableDates: newVenue.unavailableDates.filter((d) => d !== dateStr) });
+      toast.success("Date unblocked successfully");
     }
   };
 
@@ -112,7 +116,7 @@ const Venues = () => {
       await api.venues.create(newVenue);
       toast.success("Venue created!");
       setShowCreate(false);
-      setNewVenue({ name: "", location: "", maxGuests: 50, pricePerDay: 500, description: "", slug: "", images: [], unavailableDates: [] });
+      setNewVenue({ name: "", location: "", maxGuests: 50, pricePerDay: 500, description: "", images: [], unavailableDates: [] });
       loadVenues();
     } catch (err) {
       toast.error("Failed to create venue");
@@ -124,7 +128,6 @@ const Venues = () => {
     try {
       await api.venues.update(editingVenue.id, {
         name: editingVenue.name,
-        slug: editingVenue.slug,
         location: editingVenue.location,
         maxGuests: editingVenue.maxGuests,
         pricePerDay: editingVenue.pricePerDay,
@@ -155,12 +158,12 @@ const Venues = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-semibold">Venues</h1>
+          <h1 className="font-display text-2xl font-semibold sm:text-3xl md:text-4xl">Venues</h1>
           <p className="text-sm text-muted-foreground">Manage your spaces, availability, and pricing.</p>
         </div>
-        <Button onClick={() => setShowCreate(true)} className="gap-2 bg-primary hover:bg-primary-glow">
+        <Button onClick={() => setShowCreate(true)} className="gap-2 bg-primary hover:bg-primary-glow w-full sm:w-auto">
           <Plus className="h-4 w-4" /> New venue
         </Button>
       </div>
@@ -168,7 +171,7 @@ const Venues = () => {
       {venues.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">No venues yet. Create your first one!</div>
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {venues.map((v) => (
             <div key={v.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-smooth hover:shadow-elegant">
               <div className="aspect-[16/10] overflow-hidden bg-muted">
@@ -180,13 +183,15 @@ const Venues = () => {
                   <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{v.location}</span>
                   <span className="flex items-center gap-1"><Users className="h-3 w-3" />{v.maxGuests}</span>
                 </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <Link to={`/v/${v.slug}`} className="flex-1">
+                <div className="mt-4 flex flex-col gap-2">
+                  <Link to={`/venue/${v.id}`} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full">View</Button>
                   </Link>
-                  <Button variant="outline" size="icon" onClick={() => share(v.slug)}><Share2 className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon" onClick={() => setEditingVenue(v)}><Edit2 className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDelete(v.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="icon" onClick={() => share(v.id)}><Share2 className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" onClick={() => setEditingVenue(v)}><Edit2 className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDelete(v.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -195,15 +200,14 @@ const Venues = () => {
       )}
 
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto mx-4">
           <DialogHeader>
             <DialogTitle>Create New Venue</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
             <div><Label>Name</Label><Input value={newVenue.name} onChange={(e) => setNewVenue({...newVenue, name: e.target.value})} required /></div>
-            <div><Label>Slug</Label><Input value={newVenue.slug} onChange={(e) => setNewVenue({...newVenue, slug: e.target.value})} required placeholder="my-venue" /></div>
             <div><Label>Location</Label><Input value={newVenue.location} onChange={(e) => setNewVenue({...newVenue, location: e.target.value})} required /></div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><Label>Max Guests</Label><Input type="number" value={newVenue.maxGuests} onChange={(e) => setNewVenue({...newVenue, maxGuests: +e.target.value})} required /></div>
               <div><Label>Price/Day (₦)</Label><Input type="number" value={newVenue.pricePerDay} onChange={(e) => setNewVenue({...newVenue, pricePerDay: +e.target.value})} required /></div>
             </div>
@@ -255,15 +259,14 @@ const Venues = () => {
       </Dialog>
 
       <Dialog open={!!editingVenue} onOpenChange={(o) => !o && setEditingVenue(null)}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto mx-4">
           <DialogHeader>
             <DialogTitle>Edit Venue</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div><Label>Name</Label><Input value={editingVenue?.name || ""} onChange={(e) => setEditingVenue({...editingVenue!, name: e.target.value})} /></div>
-            <div><Label>Slug</Label><Input value={editingVenue?.slug || ""} onChange={(e) => setEditingVenue({...editingVenue!, slug: e.target.value})} /></div>
             <div><Label>Location</Label><Input value={editingVenue?.location || ""} onChange={(e) => setEditingVenue({...editingVenue!, location: e.target.value})} /></div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><Label>Max Guests</Label><Input type="number" value={editingVenue?.maxGuests || 0} onChange={(e) => setEditingVenue({...editingVenue!, maxGuests: +e.target.value})} /></div>
               <div><Label>Price/Day ($)</Label><Input type="number" value={editingVenue?.pricePerDay || 0} onChange={(e) => setEditingVenue({...editingVenue!, pricePerDay: +e.target.value})} /></div>
             </div>
@@ -315,24 +318,42 @@ const Venues = () => {
       </Dialog>
 
       <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
-        <DialogContent>
+        <DialogContent className="max-w-lg mx-4">
           <DialogHeader>
-            <DialogTitle>Block Dates</DialogTitle>
+            <DialogTitle className="text-lg">Block Dates</DialogTitle>
+            <DialogDescription className="text-sm">
+              Click dates to select multiple dates for blocking
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-center py-4">
+          <div className="flex justify-center py-2">
             <DateCalendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
+              mode="multiple"
+              selected={selectedDates}
+              onSelect={setSelectedDates}
               disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+              className="rounded-md border text-sm"
             />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDatePicker(false)}>Cancel</Button>
-            <Button onClick={addUnavailableDate} disabled={!selectedDate} className="bg-primary hover:bg-primary-glow">
-              Block this date
-            </Button>
-          </DialogFooter>
+          <div className="flex items-center justify-between py-2">
+            <div className="text-sm text-muted-foreground">
+              {selectedDates.length > 0 ? (
+                <span className="font-medium text-primary">{selectedDates.length} date{selectedDates.length > 1 ? 's' : ''} selected</span>
+              ) : (
+                <span>No dates selected</span>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowDatePicker(false)}>Cancel</Button>
+              <Button 
+                onClick={addUnavailableDates} 
+                disabled={selectedDates.length === 0} 
+                className="bg-primary hover:bg-primary-glow"
+                size="sm"
+              >
+                Block {selectedDates.length > 0 ? `${selectedDates.length} date${selectedDates.length > 1 ? 's' : ''}` : 'dates'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

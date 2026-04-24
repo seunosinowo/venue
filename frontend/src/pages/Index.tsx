@@ -9,7 +9,7 @@ import { VenueCard } from "@/components/VenueCard";
 import { api } from "@/lib/api";
 const heroImage = "/venue-hero.jpg";
 
-type Venue = { id: string; slug: string; name: string; location: string; maxGuests: number; pricePerDay: number; description: string; images: string[]; amenities: string[]; unavailableDates: string[] };
+type Venue = { id: string; name: string; location: string; maxGuests: number; pricePerDay: number; description: string; images: string[]; amenities: string[]; unavailableDates: string[] };
 
 const Index = () => {
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -42,10 +42,10 @@ const Index = () => {
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs font-medium text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Bookings, inspections, all in one flow
             </span>
-            <h1 className="mt-5 font-display text-5xl font-semibold leading-[1.05] text-balance md:text-6xl lg:text-7xl">
+            <h1 className="mt-5 font-display text-3xl font-semibold leading-[1.05] text-balance sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl">
               Find a venue <em className="italic text-primary-glow">worth</em> remembering.
             </h1>
-            <p className="mt-5 max-w-lg text-lg text-muted-foreground text-balance">
+            <p className="mt-5 max-w-lg text-base sm:text-lg text-muted-foreground text-balance">
               Venue Flow lets hosts manage availability and lets guests check open dates and book inspections — beautifully, in seconds.
             </p>
 
@@ -139,7 +139,7 @@ const Index = () => {
                 </Button>
               </Link>
               {venues[0] && (
-                <Link to={`/v/${venues[0].slug}`}>
+                <Link to={`/venue/${venues[0].id}`}>
                   <Button size="lg" variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
                     See a sample venue
                   </Button>

@@ -21,7 +21,7 @@ router.get('/public', async (req, res) => {
   try {
     const venues = await prisma.venue.findMany({
       select: {
-        id: true, slug: true, name: true, location: true, maxGuests: true,
+        id: true, name: true, location: true, maxGuests: true,
         pricePerDay: true, description: true, images: true, amenities: true,
         unavailableDates: true, hostId: false
       }
@@ -32,10 +32,10 @@ router.get('/public', async (req, res) => {
   }
 });
 
-router.get('/:slug', async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const venue = await prisma.venue.findUnique({
-      where: { slug: req.params.slug }
+      where: { id: req.params.id }
     });
     if (!venue) return res.status(404).json({ error: 'Venue not found' });
     res.json(venue);
@@ -46,16 +46,21 @@ router.get('/:slug', async (req, res) => {
 
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { name, location, maxGuests, pricePerDay, description, images, amenities, slug } = req.body;
+    const { name, location, maxGuests, pricePerDay, description, images, amenities } = req.body;
     
     const venue = await prisma.venue.create({
       data: {
-        name, location, maxGuests, pricePerDay, description, slug,
+        name, 
+        location, 
+        maxGuests: parseInt(maxGuests), 
+        pricePerDay: parseInt(pricePerDay), 
+        description,
         images: images || [],
         amenities: amenities || [],
         hostId: req.user.userId
       }
     });
+    
     res.json(venue);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -64,9 +69,13 @@ router.post('/', authenticate, async (req, res) => {
 
 router.put('/:id', authenticate, async (req, res) => {
   try {
+    const { name, location, maxGuests, pricePerDay, description, images, amenities, unavailableDates } = req.body;
+    
     const venue = await prisma.venue.update({
       where: { id: req.params.id },
-      data: req.body
+      data: {
+        name, location, maxGuests, pricePerDay, description, images, amenities, unavailableDates
+      }
     });
     res.json(venue);
   } catch (err) {

@@ -1,9 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Download, Star } from "lucide-react";
+import { Download, Copy, Star, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { venues } from "@/data/venues";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+type Venue = {
+  id: string;
+  name: string;
+  location: string;
+  maxGuests: number;
+  pricePerDay: number;
+  description: string;
+  images: string[];
+  amenities: string[];
+  unavailableDates: string[];
+};
 
 const sampleFeedback = [
   { venue: "Skyline Rooftop", name: "Anna G.", rating: 5, comment: "Magical sunset view, staff were incredible." },
@@ -12,62 +25,168 @@ const sampleFeedback = [
 ];
 
 const QR = () => {
-  const [active, setActive] = useState(venues[0]);
-  const url = `${window.location.origin}/v/${active.slug}?feedback=1`;
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadVenues();
+  }, []);
+
+  const loadVenues = async () => {
+    try {
+      const data = await api.venues.getAll();
+      setVenues(Array.isArray(data) ? data : []);
+      if (data.length > 0) {
+        setSelectedVenue(data[0]);
+      }
+    } catch (err) {
+      console.error("Failed to load venues");
+      setVenues([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const url = selectedVenue ? `${window.location.origin}/venue/${selectedVenue.id}?feedback=1` : "";
+
+  const copyLink = () => {
+    if (url) {
+      navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard!");
+    }
+  };
+
+  const downloadQR = () => {
+    if (!selectedVenue) return;
+    
+    const svg = document.getElementById("qr-code-svg");
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = 400;
+      canvas.height = 400;
+      ctx?.drawImage(img, 0, 0);
+      
+      const pngFile = canvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `${selectedVenue.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_qr.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+      toast.success("QR code downloaded!");
+    };
+    
+    img.src = "data:image/svg+xml;base64," + btoa(svgData);
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
       <div>
-        <h1 className="font-display text-4xl font-semibold">QR & Feedback</h1>
-        <p className="text-sm text-muted-foreground">Print a QR per venue. Guests scan to leave a quick rating.</p>
+        <h1 className="font-display text-2xl font-semibold sm:text-3xl md:text-4xl">QR & Feedback</h1>
+        <p className="text-sm text-muted-foreground">Generate QR codes for your venues to collect guest feedback.</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Choose venue</p>
-          <ul className="space-y-1">
-            {venues.map((v) => (
-              <li key={v.id}>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : venues.length === 0 ? (
+        <div className="text-center py-12">
+          <QrCode className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No venues found</h3>
+          <p className="text-muted-foreground">Create your first venue to generate QR codes.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Venue Selection */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+            <h2 className="font-display text-lg font-semibold mb-4">Select Venue</h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {venues.map((v) => (
                 <button
-                  onClick={() => setActive(v)}
+                  key={v.id}
+                  onClick={() => setSelectedVenue(v)}
                   className={cn(
-                    "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors",
-                    active.id === v.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary",
+                    "p-4 rounded-xl border-2 text-left transition-all",
+                    selectedVenue?.id === v.id
+                      ? "border-primary bg-primary/5 shadow-soft"
+                      : "border-border hover:border-primary/50 hover:bg-secondary/50"
                   )}
                 >
-                  {v.name}
+                  <div className="font-medium text-sm mb-1">{v.name}</div>
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span>{v.location}</span>
+                    <span>•</span>
+                    <span>Up to {v.maxGuests} guests</span>
+                  </div>
                 </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-8 shadow-soft">
-          <div className="rounded-2xl bg-background p-5 shadow-elegant">
-            <QRCodeSVG value={url} size={180} bgColor="transparent" fgColor="hsl(160, 45%, 18%)" level="M" />
+              ))}
+            </div>
           </div>
-          <p className="mt-4 font-display text-lg font-semibold">{active.name}</p>
-          <p className="text-xs text-muted-foreground break-all max-w-[220px] text-center">{url}</p>
-          <Button variant="outline" size="sm" className="mt-4 gap-2"><Download className="h-4 w-4" /> Download PNG</Button>
-        </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-          <h2 className="font-display text-lg font-semibold">Recent feedback</h2>
-          <ul className="mt-3 space-y-4">
-            {sampleFeedback.map((f, i) => (
-              <li key={i} className="border-b border-border pb-3 last:border-0">
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: f.rating }).map((_, j) => (
-                    <Star key={j} className="h-3.5 w-3.5 fill-accent text-accent" />
-                  ))}
+          {/* QR Code Display - Shows when venue is selected */}
+          {selectedVenue && (
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-soft animate-fade-in">
+              <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
+                {/* QR Code */}
+                <div className="flex-shrink-0">
+                  <div className="rounded-2xl bg-white p-6 shadow-elegant">
+                    <QRCodeSVG 
+                      id="qr-code-svg"
+                      value={url} 
+                      size={200} 
+                      bgColor="white" 
+                      fgColor="#000000" 
+                      level="M" 
+                    />
+                  </div>
                 </div>
-                <p className="mt-1 text-sm">{f.comment}</p>
-                <p className="text-xs text-muted-foreground">{f.name} · {f.venue}</p>
-              </li>
-            ))}
-          </ul>
+
+                {/* Venue Info and Actions */}
+                <div className="flex-1 space-y-4 text-center lg:text-left">
+                  <div>
+                    <h3 className="font-display text-xl font-semibold mb-2">{selectedVenue.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-1">{selectedVenue.location}</p>
+                    <p className="text-xs text-muted-foreground break-all bg-secondary/50 p-2 rounded">{url}</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                    <Button onClick={copyLink} variant="outline" size="sm" className="gap-2">
+                      <Copy className="h-4 w-4" /> Copy Link
+                    </Button>
+                    <Button onClick={downloadQR} size="sm" className="gap-2 bg-primary hover:bg-primary-glow">
+                      <Download className="h-4 w-4" /> Download QR
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Recent Feedback */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+            <h2 className="font-display text-lg font-semibold mb-4">Recent Feedback</h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {sampleFeedback.map((f, i) => (
+                <div key={i} className="p-4 rounded-xl bg-secondary/30">
+                  <div className="flex items-center gap-1 mb-2">
+                    {Array.from({ length: f.rating }).map((_, j) => (
+                      <Star key={j} className="h-4 w-4 fill-accent text-accent" />
+                    ))}
+                  </div>
+                  <p className="text-sm mb-2">{f.comment}</p>
+                  <p className="text-xs text-muted-foreground">{f.name} · {f.venue}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
