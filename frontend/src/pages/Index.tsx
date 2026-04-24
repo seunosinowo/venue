@@ -93,28 +93,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured */}
-      <section className="container py-16 md:py-24">
-        <div className="flex items-end justify-between gap-6">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-widest text-accent">Featured</p>
-            <h2 className="mt-2 font-display text-4xl font-semibold md:text-5xl">Spaces with character</h2>
-          </div>
-          <Link to="/dashboard" className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline md:inline-flex">
-            Browse all <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-        {loading ? (
-          <div className="mt-10 text-center py-12 text-muted-foreground">Loading venues...</div>
-        ) : venues.length === 0 ? (
-          <div className="mt-10 text-center py-12 text-muted-foreground">No venues available yet. <Link to="/dashboard" className="text-primary">Host your first venue</Link></div>
-        ) : (
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {venues.map((v, i) => <VenueCard key={v.id} venue={v} index={i} />)}
-          </div>
-        )}
-      </section>
-
+      
       {/* How it works */}
       <section id="how" className="bg-secondary/40 py-20 md:py-28">
         <div className="container">
