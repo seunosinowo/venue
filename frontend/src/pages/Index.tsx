@@ -22,9 +22,10 @@ const Index = () => {
   const loadVenues = async () => {
     try {
       const data = await api.venues.getPublic();
-      setVenues(data);
+      setVenues(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to load venues");
+      setVenues([]);
     } finally {
       setLoading(false);
     }

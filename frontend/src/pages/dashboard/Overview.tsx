@@ -22,14 +22,17 @@ const Overview = () => {
         api.bookings.getAll()
       ]);
       
+      const venuesArray = Array.isArray(venues) ? venues : [];
+      const bookingsArray = Array.isArray(bookings) ? bookings : [];
+      
       setStats({
-        venues: venues.length,
-        pending: bookings.filter((b: any) => b.status === "PENDING").length,
-        approved: bookings.filter((b: any) => b.status === "APPROVED").length
+        venues: venuesArray.length,
+        pending: bookingsArray.filter((b: any) => b.status === "PENDING").length,
+        approved: bookingsArray.filter((b: any) => b.status === "APPROVED").length
       });
 
       setRecent(
-        bookings.slice(0, 4).map((b: any) => ({
+        bookingsArray.slice(0, 4).map((b: any) => ({
           name: b.guestName,
           venue: b.venue?.name || "Unknown",
           action: b.status === "APPROVED" ? "Approved" : b.status === "DECLINED" ? "Declined" : "Pending",
